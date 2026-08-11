@@ -1,0 +1,81 @@
+{
+  "app": {
+    "title": "Afghani Rates"
+  },
+  "navigation": {
+    "rates": "Rates",
+    "convert": "Convert"
+  },
+  "rates": {
+    "title": "Exchange rates",
+    "official_source": "Official Da Afghanistan Bank rates",
+    "source_with_date": "Da Afghanistan Bank · {date}",
+    "currency_column": "CURRENCY",
+    "value_column": "VALUE IN AFN",
+    "disclaimer": "Official reference rates. Cash-market prices may differ.",
+    "semantic": "{unit} {currency} equals {value} Afghanis"
+  },
+  "actions": {
+    "refresh_rates": "Refresh rates",
+    "change_language": "Change language",
+    "try_again": "Try again",
+    "swap_currencies": "Swap currencies",
+    "close": "Close"
+  },
+  "errors": {
+    "connection_title": "Internet connection required",
+    "unavailable_title": "Live rates unavailable",
+    "connection": "Unable to load live rates. Check your internet connection and try again.",
+    "incomplete": "The live rate service returned incomplete data. Please try again."
+  },
+  "language": {
+    "title": "App language",
+    "english": "English",
+    "farsi": "فارسی",
+    "pashto": "پښتو"
+  },
+  "converter": {
+    "title": "Convert",
+    "loading": "Loading live rates…",
+    "unavailable": "Live rates unavailable",
+    "source_with_date": "Da Afghanistan Bank · {date}",
+    "send_currency": "Send currency",
+    "receive_currency": "Receive currency",
+    "choose_currency": "Choose a currency",
+    "you_send": "YOU SEND",
+    "you_receive": "YOU RECEIVE",
+    "live_rate": "LIVE RATE",
+    "rate": "1 {from} = {rate} {to}",
+    "disclaimer": "Reference conversion only. Cash-market prices may differ."
+  },
+  "currencies": {
+    "afn": "Afghan Afghani",
+    "usd": "US Dollar",
+    "eur": "Euro",
+    "gbp": "British Pound",
+    "chf": "Swiss Franc",
+    "aed": "UAE Dirham",
+    "sar": "Saudi Riyal",
+    "pkr": "Pakistani Rupee",
+    "inr": "Indian Rupee",
+    "cny": "Chinese Yuan",
+    "irr": "Iranian Rial"
+  },
+  "date": {
+    "display": "{month} {day}, {year}"
+  },
+  "months": {
+    "1": "Jan",
+    "2": "Feb",
+    "3": "Mar",
+    "4": "Apr",
+    "5": "May",
+    "6": "Jun",
+    "7": "Jul",
+    "8": "Aug",
+    "9": "Sep",
+    "10": "Oct",
+    "11": "Nov",
+    "12": "Dec"
+  }
+}

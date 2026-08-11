@@ -9,15 +9,12 @@ abstract interface class RateRepository {
 }
 
 class RateFetchException implements Exception {
-  const RateFetchException([
-    this.message =
-        'Unable to load live rates. Check your internet connection and try again.',
-  ]);
+  const RateFetchException([this.translationKey = 'errors.connection']);
 
-  final String message;
+  final String translationKey;
 
   @override
-  String toString() => message;
+  String toString() => translationKey;
 }
 
 class RemoteRateRepository implements RateRepository {
@@ -75,9 +72,7 @@ class RemoteRateRepository implements RateRepository {
           .toList(growable: false);
 
       if (rates.length != _currencyMetadata.length || publishedDate == null) {
-        throw const RateFetchException(
-          'The live rate service returned incomplete data. Please try again.',
-        );
+        throw const RateFetchException('errors.incomplete');
       }
 
       return RateSnapshot(

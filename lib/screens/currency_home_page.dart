@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,6 +9,36 @@ const _green = Color(0xFF08745B);
 const _darkGreen = Color(0xFF0B3D30);
 const _muted = Color(0xFF68756F);
 const _ratesSurface = Color(0xFFF8FAF8);
+
+const _languageOptions = [
+  _LanguageOption(
+    locale: Locale('en'),
+    code: 'EN',
+    translationKey: 'language.english',
+  ),
+  _LanguageOption(
+    locale: Locale('fa'),
+    code: 'فا',
+    translationKey: 'language.farsi',
+  ),
+  _LanguageOption(
+    locale: Locale('ps'),
+    code: 'پښ',
+    translationKey: 'language.pashto',
+  ),
+];
+
+class _LanguageOption {
+  const _LanguageOption({
+    required this.locale,
+    required this.code,
+    required this.translationKey,
+  });
+
+  final Locale locale;
+  final String code;
+  final String translationKey;
+}
 
 class CurrencyHomePage extends StatefulWidget {
   const CurrencyHomePage({super.key, required this.repository});
@@ -21,7 +52,7 @@ class CurrencyHomePage extends StatefulWidget {
 class _CurrencyHomePageState extends State<CurrencyHomePage> {
   int _selectedIndex = 0;
   RateSnapshot? _snapshot;
-  String? _errorMessage;
+  String? _errorKey;
   bool _isLoading = true;
 
   @override
@@ -34,7 +65,7 @@ class _CurrencyHomePageState extends State<CurrencyHomePage> {
     if (mounted) {
       setState(() {
         _isLoading = true;
-        _errorMessage = null;
+        _errorKey = null;
       });
     }
     try {
@@ -48,15 +79,14 @@ class _CurrencyHomePageState extends State<CurrencyHomePage> {
       if (!mounted) return;
       setState(() {
         _snapshot = null;
-        _errorMessage = error.message;
+        _errorKey = error.translationKey;
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _snapshot = null;
-        _errorMessage =
-            'Unable to load live rates. Check your internet connection and try again.';
+        _errorKey = 'errors.connection';
         _isLoading = false;
       });
     }
@@ -71,14 +101,14 @@ class _CurrencyHomePageState extends State<CurrencyHomePage> {
             ? _RatesDashboard(
                 key: const ValueKey('rates'),
                 snapshot: _snapshot,
-                errorMessage: _errorMessage,
+                errorKey: _errorKey,
                 isLoading: _isLoading,
                 onRefresh: _refresh,
               )
             : _ConverterPage(
                 key: const ValueKey('converter'),
                 snapshot: _snapshot,
-                errorMessage: _errorMessage,
+                errorKey: _errorKey,
                 isLoading: _isLoading,
                 onRetry: _refresh,
               ),
@@ -91,16 +121,19 @@ class _CurrencyHomePageState extends State<CurrencyHomePage> {
           selectedIndex: _selectedIndex,
           onDestinationSelected: (index) =>
               setState(() => _selectedIndex = index),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.trending_up_rounded),
-              selectedIcon: Icon(Icons.trending_up_rounded, color: _green),
-              label: 'Rates',
+              icon: const Icon(Icons.trending_up_rounded),
+              selectedIcon: const Icon(
+                Icons.trending_up_rounded,
+                color: _green,
+              ),
+              label: context.tr('navigation.rates'),
             ),
             NavigationDestination(
-              icon: Icon(Icons.swap_horiz_rounded),
-              selectedIcon: Icon(Icons.swap_horiz_rounded, color: _green),
-              label: 'Convert',
+              icon: const Icon(Icons.swap_horiz_rounded),
+              selectedIcon: const Icon(Icons.swap_horiz_rounded, color: _green),
+              label: context.tr('navigation.convert'),
             ),
           ],
         ),
@@ -113,13 +146,13 @@ class _RatesDashboard extends StatelessWidget {
   const _RatesDashboard({
     super.key,
     required this.snapshot,
-    required this.errorMessage,
+    required this.errorKey,
     required this.isLoading,
     required this.onRefresh,
   });
 
   final RateSnapshot? snapshot;
-  final String? errorMessage;
+  final String? errorKey;
   final bool isLoading;
   final Future<void> Function() onRefresh;
 
@@ -132,9 +165,12 @@ class _RatesDashboard extends StatelessWidget {
     if (!isLoading && snapshot == null) {
       body = _RateLoadError(
         key: const ValueKey('rates_error'),
-        message:
-            errorMessage ??
-            'Live rates are unavailable. Please connect to the internet and try again.',
+        title: context.tr(
+          errorKey == 'errors.incomplete'
+              ? 'errors.unavailable_title'
+              : 'errors.connection_title',
+        ),
+        message: context.tr(errorKey ?? 'errors.connection'),
         onRetry: onRefresh,
       );
     } else if (snapshot == null) {
@@ -163,13 +199,17 @@ class _RatesDashboard extends StatelessWidget {
                 itemBuilder: (context, index) => _RateTile(rate: rates[index]),
               ),
             ),
-            const SliverPadding(
-              padding: EdgeInsets.fromLTRB(24, 22, 24, 34),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 34),
               sliver: SliverToBoxAdapter(
                 child: Text(
-                  'Official reference rates. Cash-market prices may differ.',
+                  context.tr('rates.disclaimer'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: _muted, fontSize: 11, height: 1.4),
+                  style: const TextStyle(
+                    color: _muted,
+                    fontSize: 11,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ),
@@ -244,13 +284,12 @@ class _Header extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Exchange rates',
-                    style: TextStyle(
+                  Text(
+                    context.tr('rates.title'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
                       height: 1.08,
-                      letterSpacing: -.5,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -266,8 +305,13 @@ class _Header extends StatelessWidget {
                       Flexible(
                         child: Text(
                           snapshot == null
-                              ? 'Official Da Afghanistan Bank rates'
-                              : 'Da Afghanistan Bank  ·  ${formatDate(snapshot!.asOf)}',
+                              ? context.tr('rates.official_source')
+                              : context.tr(
+                                  'rates.source_with_date',
+                                  namedArgs: {
+                                    'date': formatDate(context, snapshot!.asOf),
+                                  },
+                                ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -282,12 +326,14 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
+            const _LanguageButton(),
             IconButton(
-              tooltip: 'Refresh rates',
+              tooltip: context.tr('actions.refresh_rates'),
               onPressed: isLoading ? null : onRefresh,
               style: IconButton.styleFrom(
                 foregroundColor: Colors.white,
                 disabledForegroundColor: Colors.white60,
+                visualDensity: VisualDensity.compact,
               ),
               icon: isLoading
                   ? const SizedBox.square(
@@ -306,30 +352,181 @@ class _Header extends StatelessWidget {
   }
 }
 
+class _LanguageButton extends StatelessWidget {
+  const _LanguageButton();
+
+  Future<void> _showPicker(BuildContext context) async {
+    final selected = await showModalBottomSheet<Locale>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      builder: (context) => _LanguagePicker(selected: context.locale),
+    );
+    if (selected != null && context.mounted) await context.setLocale(selected);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      key: const Key('language_button'),
+      tooltip: context.tr('actions.change_language'),
+      onPressed: () => _showPicker(context),
+      style: IconButton.styleFrom(
+        foregroundColor: Colors.white,
+        visualDensity: VisualDensity.compact,
+      ),
+      icon: const Icon(Icons.language_rounded, size: 22),
+    );
+  }
+}
+
+class _LanguagePicker extends StatelessWidget {
+  const _LanguagePicker({required this.selected});
+
+  final Locale selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _ratesSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 9),
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD5DEDA),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 14),
+              child: Row(
+                children: [
+                  const Icon(Icons.language_rounded, color: _green, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    context.tr('language.title'),
+                    style: const TextStyle(
+                      color: _darkGreen,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFE1E8E4)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+              child: Column(
+                children: _languageOptions
+                    .map((language) {
+                      final isSelected =
+                          language.locale.languageCode == selected.languageCode;
+                      return Material(
+                        color: isSelected
+                            ? const Color(0xFFE5F2ED)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(15),
+                        child: InkWell(
+                          key: Key('language_${language.locale.languageCode}'),
+                          onTap: () => Navigator.pop(context, language.locale),
+                          borderRadius: BorderRadius.circular(15),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 13,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.white70
+                                        : const Color(0xFFEAF2EE),
+                                    borderRadius: BorderRadius.circular(11),
+                                  ),
+                                  child: Text(
+                                    language.code,
+                                    style: const TextStyle(
+                                      color: _darkGreen,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context.tr(language.translationKey),
+                                        style: const TextStyle(
+                                          color: _darkGreen,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isSelected)
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    color: _green,
+                                    size: 21,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    })
+                    .toList(growable: false),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RatesColumnHeader extends StatelessWidget {
   const _RatesColumnHeader();
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Expanded(
           child: Text(
-            'CURRENCY',
-            style: TextStyle(
+            context.tr('rates.currency_column'),
+            style: const TextStyle(
               color: _muted,
               fontSize: 10,
-              letterSpacing: 1.2,
               fontWeight: FontWeight.w800,
             ),
           ),
         ),
         Text(
-          'VALUE IN AFN',
-          style: TextStyle(
+          context.tr('rates.value_column'),
+          style: const TextStyle(
             color: _muted,
             fontSize: 10,
-            letterSpacing: 1.2,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -355,10 +552,12 @@ class _RatesLoadingView extends StatelessWidget {
 class _RateLoadError extends StatelessWidget {
   const _RateLoadError({
     super.key,
+    required this.title,
     required this.message,
     required this.onRetry,
   });
 
+  final String title;
   final String message;
   final Future<void> Function() onRetry;
 
@@ -371,10 +570,10 @@ class _RateLoadError extends StatelessWidget {
         children: [
           const Icon(Icons.wifi_off_rounded, size: 54, color: _muted),
           const SizedBox(height: 18),
-          const Text(
-            'Internet connection required',
+          Text(
+            title,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 9),
           Text(
@@ -387,7 +586,7 @@ class _RateLoadError extends StatelessWidget {
             key: const Key('retry_rates'),
             onPressed: onRetry,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Try again'),
+            label: Text(context.tr('actions.try_again')),
           ),
         ],
       ),
@@ -403,12 +602,19 @@ class _RateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final value = formatRate(rate.afnPerUnit * rate.displayUnit);
+    final name = currencyName(context, rate.code);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Semantics(
-        label:
-            '${formatUnit(rate.displayUnit)} ${rate.name} equals $value Afghanis',
+        label: context.tr(
+          'rates.semantic',
+          namedArgs: {
+            'unit': formatUnit(rate.displayUnit),
+            'currency': name,
+            'value': value,
+          },
+        ),
         child: Row(
           children: [
             Container(
@@ -427,7 +633,7 @@ class _RateTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    rate.name,
+                    name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -502,13 +708,13 @@ class _ConverterPage extends StatefulWidget {
   const _ConverterPage({
     super.key,
     required this.snapshot,
-    required this.errorMessage,
+    required this.errorKey,
     required this.isLoading,
     required this.onRetry,
   });
 
   final RateSnapshot? snapshot;
-  final String? errorMessage;
+  final String? errorKey;
   final bool isLoading;
   final Future<void> Function() onRetry;
 
@@ -570,7 +776,9 @@ class _ConverterPageState extends State<_ConverterPage> {
       builder: (context) => _CurrencyPicker(
         currencies: _currencies,
         selectedCode: isFrom ? _fromCode : _toCode,
-        title: isFrom ? 'Send currency' : 'Receive currency',
+        title: context.tr(
+          isFrom ? 'converter.send_currency' : 'converter.receive_currency',
+        ),
       ),
     );
     if (selected == null || !mounted) return;
@@ -592,9 +800,12 @@ class _ConverterPageState extends State<_ConverterPage> {
     if (!widget.isLoading && widget.snapshot == null) {
       body = _RateLoadError(
         key: const ValueKey('converter_error'),
-        message:
-            widget.errorMessage ??
-            'Live rates are unavailable. Please connect to the internet and try again.',
+        title: context.tr(
+          widget.errorKey == 'errors.incomplete'
+              ? 'errors.unavailable_title'
+              : 'errors.connection_title',
+        ),
+        message: context.tr(widget.errorKey ?? 'errors.connection'),
         onRetry: widget.onRetry,
       );
     } else if (widget.snapshot == null || from == null || to == null) {
@@ -610,12 +821,11 @@ class _ConverterPageState extends State<_ConverterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'YOU SEND',
-              style: TextStyle(
+            Text(
+              context.tr('converter.you_send'),
+              style: const TextStyle(
                 color: _muted,
                 fontSize: 10,
-                letterSpacing: 1.4,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -667,20 +877,23 @@ class _ConverterPageState extends State<_ConverterPage> {
                 alignment: Alignment.center,
                 children: [
                   const Divider(color: Color(0xFFDCE5E1)),
-                  Material(
-                    color: _darkGreen,
-                    shape: const CircleBorder(),
-                    elevation: 0,
-                    child: InkWell(
-                      key: const Key('swap_currencies'),
-                      onTap: _swap,
-                      customBorder: const CircleBorder(),
-                      child: const SizedBox.square(
-                        dimension: 40,
-                        child: Icon(
-                          Icons.swap_vert_rounded,
-                          color: Colors.white,
-                          size: 21,
+                  Tooltip(
+                    message: context.tr('actions.swap_currencies'),
+                    child: Material(
+                      color: _darkGreen,
+                      shape: const CircleBorder(),
+                      elevation: 0,
+                      child: InkWell(
+                        key: const Key('swap_currencies'),
+                        onTap: _swap,
+                        customBorder: const CircleBorder(),
+                        child: const SizedBox.square(
+                          dimension: 40,
+                          child: Icon(
+                            Icons.swap_vert_rounded,
+                            color: Colors.white,
+                            size: 21,
+                          ),
                         ),
                       ),
                     ),
@@ -688,12 +901,11 @@ class _ConverterPageState extends State<_ConverterPage> {
                 ],
               ),
             ),
-            const Text(
-              'YOU RECEIVE',
-              style: TextStyle(
+            Text(
+              context.tr('converter.you_receive'),
+              style: const TextStyle(
                 color: _green,
                 fontSize: 10,
-                letterSpacing: 1.4,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -743,7 +955,14 @@ class _ConverterPageState extends State<_ConverterPage> {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    '1 ${from.code} = ${formatRate(from.afnPerUnit / to.afnPerUnit)} ${to.code}',
+                    context.tr(
+                      'converter.rate',
+                      namedArgs: {
+                        'from': from.code,
+                        'rate': formatRate(from.afnPerUnit / to.afnPerUnit),
+                        'to': to.code,
+                      },
+                    ),
                     style: const TextStyle(
                       color: _darkGreen,
                       fontSize: 12,
@@ -751,24 +970,27 @@ class _ConverterPageState extends State<_ConverterPage> {
                     ),
                   ),
                 ),
-                const Text(
-                  'LIVE RATE',
-                  style: TextStyle(
+                Text(
+                  context.tr('converter.live_rate'),
+                  style: const TextStyle(
                     color: _green,
                     fontSize: 9,
-                    letterSpacing: .7,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const SizedBox(
+            SizedBox(
               width: double.infinity,
               child: Text(
-                'Reference conversion only. Cash-market prices may differ.',
+                context.tr('converter.disclaimer'),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: _muted, fontSize: 11, height: 1.4),
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 11,
+                  height: 1.4,
+                ),
               ),
             ),
           ],
@@ -840,13 +1062,12 @@ class _ConverterHeader extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Convert',
-              style: TextStyle(
+            Text(
+              context.tr('converter.title'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 25,
                 height: 1.08,
-                letterSpacing: -.5,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -862,10 +1083,15 @@ class _ConverterHeader extends StatelessWidget {
                 Flexible(
                   child: Text(
                     isLoading
-                        ? 'Loading live rates…'
+                        ? context.tr('converter.loading')
                         : snapshot == null
-                        ? 'Live rates unavailable'
-                        : 'Da Afghanistan Bank  ·  ${formatDate(snapshot!.asOf)}',
+                        ? context.tr('converter.unavailable')
+                        : context.tr(
+                            'converter.source_with_date',
+                            namedArgs: {
+                              'date': formatDate(context, snapshot!.asOf),
+                            },
+                          ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -979,19 +1205,19 @@ class _CurrencyPicker extends StatelessWidget {
                         style: const TextStyle(
                           color: _darkGreen,
                           fontSize: 23,
-                          letterSpacing: -.3,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Choose a currency',
-                        style: TextStyle(color: _muted, fontSize: 12),
+                      Text(
+                        context.tr('converter.choose_currency'),
+                        style: const TextStyle(color: _muted, fontSize: 12),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
+                  tooltip: context.tr('actions.close'),
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(
                     Icons.close_rounded,
@@ -1062,7 +1288,7 @@ class _CurrencyPicker extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  currency.name,
+                                  currencyName(context, currency.code),
                                   style: const TextStyle(
                                     color: _muted,
                                     fontSize: 12,
@@ -1164,20 +1390,14 @@ String formatAmount(double value) {
   return '${buffer.toString()}.${parts.last}';
 }
 
-String formatDate(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}, ${date.year}';
-}
+String currencyName(BuildContext context, String code) =>
+    context.tr('currencies.${code.toLowerCase()}');
+
+String formatDate(BuildContext context, DateTime date) => context.tr(
+  'date.display',
+  namedArgs: {
+    'month': context.tr('months.${date.month}'),
+    'day': date.day.toString(),
+    'year': date.year.toString(),
+  },
+);
