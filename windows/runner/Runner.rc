@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "currency_app" "\0"
+            VALUE "CompanyName", "Amini" "\0"
+            VALUE "FileDescription", "Afghan Currency" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "currency_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Amini. All rights reserved." "\0"
             VALUE "OriginalFilename", "currency_app.exe" "\0"
-            VALUE "ProductName", "currency_app" "\0"
+            VALUE "ProductName", "Afghan Currency" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -1,4 +1,4 @@
-package com.example.currency_app
+package af.afghancurrency.amini
 
 import io.flutter.embedding.android.FlutterActivity
 
